@@ -78,13 +78,13 @@ def main():
 
     try:
         # 1. Setup paths
-        input_file = Path(sys.argv[1])
-        input_path = Path(input_file)
+        input_path = Path(sys.argv[1])
+
         output_file = input_path.stem + ".md"
         output_title = input_path.stem
 
         # 2. Isolate and parse JSON
-        raw_data = isolate(input_file)
+        raw_data = isolate(input_path)
 
         # 3. Convert to Markdown
         md_result = convert(raw_data, output_title)
