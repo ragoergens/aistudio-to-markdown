@@ -53,4 +53,20 @@ To view or edit the Markdown, use an appropriate tool. Some common options:
 #### 5.2 Use the Markdown
 
 Use the Markdown in your favorite context such as other AI tools.
-* For example, upload to [Google NotebookLM](https://notebooklm.google.com/) (the use case for which I wrote this script)
+* For example, upload it to [Google NotebookLM](https://notebooklm.google.com/) (the use case for which I wrote this script)
+
+## Background
+
+The JSON exported from Google AI Studio using the **REST** option is actually wrapped in a bash shell script.
+Thus, it cannot be loaded directly into a Markdown converter.
+
+[json_to_md.py](https://github.com/ragoergens/aistudio-to-markdown/blob/main/json_to_md.py) isolates the JSON block from the bash script, converts it to Markdown, and saves it.
+
+### Frequently Asked Questions
+
+#### Q: Does the script also work with the pure JSON block of AI Studio?
+A: Yes it does.
+
+#### Q: Does the script work as a generic JSON to Markdown converter?
+A: No, it is bound the specific JSON schema of **Google AI Studio**.
+It might work with other AI tools if they use the same JSON structure for prompt exports.
