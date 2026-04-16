@@ -50,23 +50,25 @@ def convert(data, title):
     """
     Transforms Gemini API JSON structure into a Markdown string.
     """
-    markdown_lines = f"# {title}\n\n"
-    markdown_lines += "### AI Studio Conversation Export\n\n"
+    markdown_lines = [f"# {title}\n", "## AI Studio Conversation Export\n"]
 
     # Navigate the Gemini JSON structure: contents -> role/parts -> text
-    content_list = data.get("contents", [])
+    contents = data.get("contents", [])
 
-    for entry in content_list:
-        role = entry.get('role', 'unknown').capitalize()
-        # Parts can be a list of text objects
-        parts = entry.get('parts', [])
-        text_content = ""
-        for p in parts:
-            if 'text' in p:
-                text_content += p['text']
-        markdown_lines += f"### {role}\n{text_content}\n\n---\n\n"
+    for entry in contents:
+        role = entry.get("role", "Unknown").capitalize()
+        parts = entry.get("parts", [])
 
-    return markdown_lines
+        markdown_lines.append(f"### {role}")
+
+        for part in parts:
+            text = part.get("text", "")
+            if text:
+                markdown_lines.append(text)
+
+        markdown_lines.append("\n---\n")
+
+    return "\n".join(markdown_lines)
 
 
 def main():
