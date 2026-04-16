@@ -1,0 +1,13 @@
+# This marks this file as the top-most configuration
+root = true
+
+# Apply these rules to ALL files
+[*]
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# Specifically ensure IDE files follow the rule
+[*.iml]
+end_of_line = lf
