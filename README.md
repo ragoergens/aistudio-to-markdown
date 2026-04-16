@@ -1,5 +1,12 @@
 # aistudio-to-markdown
+
 JSON to Markdown Converter for Google AI Studio exports
+
+## Overview
+
+Would you like to use your Google AI Studio prompt results in another tool?
+* **Problem**: native Markdown export is missing in AI Studio, e.g. for importing into Google NotebookLM.
+* **Solution**: a quick Python script does the job: [aistudio-to-markdown / json_to_md.py](https://github.com/ragoergens/aistudio-to-markdown/blob/main/json_to_md.py)
 
 ## Usage
 
