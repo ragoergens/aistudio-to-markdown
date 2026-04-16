@@ -12,71 +12,89 @@ import sys
 from pathlib import Path
 
 
-def convert(input_file):
-    input_path = Path(input_file)
+def isolate(input_path):
+    """
+    Extracts JSON content from a shell-wrapped file.
+    Skips everything before the first '{' and stops at 'EOF'.
+    """
+    if not input_path.exists():
+        raise FileNotFoundError(f"Could not find file: {input_path}")
 
-    # Determine output name (e.g., input.json -> input.md)
-    output_file = input_path.stem + ".md"
-    output_title = input_path.stem
+    with open(input_path, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+
+    json_content = ""
+    found_start = False
+
+    for line in lines:
+        clean_line = line.strip()
+
+        # Look for the start of the JSON
+        if not found_start and clean_line.startswith('{'):
+            found_start = True
+
+        # Look for the end of the JSON
+        if found_start and clean_line == "EOF":
+            break
+
+        if found_start:
+            json_content += line
+
+    if not json_content:
+        raise ValueError("No valid JSON block found in the file.")
+
+    return json.loads(json_content)
+
+
+def convert(data, title):
+    """
+    Transforms Gemini API JSON structure into a Markdown string.
+    """
+    markdown_lines = f"# {title}\n\n"
+    markdown_lines += "### AI Studio Conversation Export\n\n"
+
+    # Navigate the Gemini JSON structure: contents -> role/parts -> text
+    content_list = data.get("contents", [])
+
+    for entry in content_list:
+        role = entry.get('role', 'unknown').capitalize()
+        # Parts can be a list of text objects
+        parts = entry.get('parts', [])
+        text_content = ""
+        for p in parts:
+            if 'text' in p:
+                text_content += p['text']
+        markdown_lines += f"### {role}\n{text_content}\n\n---\n\n"
+
+    return markdown_lines
+
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: python json_to_md.py \"your_file.txt\"")
+        return
 
     try:
-        with open(input_path, 'r', encoding='utf-8') as f:
-            lines = f.readlines()
+        # 1. Setup paths
+        input_file = Path(sys.argv[1])
+        input_path = Path(input_file)
+        output_file = input_path.stem + ".md"
+        output_title = input_path.stem
 
-        # Find the starting point of the JSON
-        json_content = ""
-        found_start = False
+        # 2. Isolate and parse JSON
+        raw_data = isolate(input_file)
 
-        for line in lines:
-            clean_line = line.strip()
+        # 3. Convert to Markdown
+        md_result = convert(raw_data, output_title)
 
-            # 1. Look for the start of the actual JSON
-            if not found_start and clean_line.startswith('{'):
-                found_start = True
-
-            # 2. Check for the END marker
-            # We check this BEFORE adding the line to json_content
-            if found_start and clean_line == "EOF":
-                break  # Exit the loop immediately
-
-            # 3. If we are currently "inside" the JSON, accumulate the line
-            if found_start:
-                json_content += line
-
-        if not json_content:
-            print("Error: No JSON content found between markers.")
-            return
-
-        # Parse the extracted string
-        data = json.loads(json_content)
-        print("Successfully parsed JSON after skipping surrounding text.")
-
-        markdown_output = f"# {output_title}\n\n"
-        markdown_output += "### AI Studio Conversation Export\n\n"
-
-        # AI Studio JSON structure typically has a 'contents' list
-        # Adjust the key if your specific export uses a different name
-        content_list = data if isinstance(data, list) else data.get('contents', [])
-
-        for entry in content_list:
-            role = entry.get('role', 'unknown').capitalize()
-            # Parts can be a list of text objects
-            parts = entry.get('parts', [])
-            text_content = ""
-            for p in parts:
-                if 'text' in p:
-                    text_content += p['text']
-            markdown_output += f"### {role}\n{text_content}\n\n---\n\n"
-
+        # 4. Save
         with open(output_file, 'w', encoding='utf-8') as f:
-            f.write(markdown_output)
+            f.write(md_result)
 
-        print(f"Success! Converted to {output_file}")
+        print(f"Success! Markdown saved to: {output_file}")
 
-    except json.JSONDecodeError as e:
-        print(f"JSON Error: {e}")
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        print(f"Error: {e}")
 
 
 # Use for debugging
@@ -94,9 +112,4 @@ def peek(input_file, num):
 
 
 if __name__ == "__main__":
-    # Check if the user provided a filename
-    if len(sys.argv) > 1:
-        # peek(sys.argv[1], 100)
-        convert(sys.argv[1])
-    else:
-        print('Usage: python convert.py <your_file.json>')
+    main()
